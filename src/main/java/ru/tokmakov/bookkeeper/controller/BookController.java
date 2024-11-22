@@ -26,7 +26,12 @@ public class BookController {
 
     @GetMapping("/{bookId}")
     public BookDto findBookById(@PathVariable Long bookId) {
-        return bookService.findBookById(bookId);
+        log.info("GET /books/{} - Request received", bookId);
+
+        BookDto bookDto = bookService.findBookById(bookId);
+
+        log.info("GET /books/{} - Response: {}", bookId, bookDto);
+        return bookDto;
     }
 
     @PostMapping

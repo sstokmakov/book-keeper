@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.tokmakov.bookkeeper.dto.BookDto;
 import ru.tokmakov.bookkeeper.dto.BookMapper;
 import ru.tokmakov.bookkeeper.dto.BookSaveDto;
+import ru.tokmakov.bookkeeper.exception.NotFoundException;
 import ru.tokmakov.bookkeeper.model.Book;
 import ru.tokmakov.bookkeeper.repository.BookRepository;
 
@@ -27,7 +28,15 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public BookDto findBookById(Long bookId) {
-        return null;
+        log.info("Attempting to find book with id: {}", bookId);
+
+        Book book = bookRepository.findById(bookId).
+                orElseThrow(() -> new NotFoundException("Book with id " + bookId + " not found"));
+
+        BookDto bookDto = BookMapper.bookToBookDto(book);
+        log.info("Successfully found book: {}", bookDto);
+
+        return bookDto;
     }
 
     @Override
