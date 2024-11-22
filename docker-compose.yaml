@@ -1,0 +1,27 @@
+services:
+  book-keeper:
+    depends_on:
+      - book-keeper-db
+    build: .
+    container_name: book-keeper
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://book-keeper-db:5432/book-keeper
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    restart: always
+
+  book-keeper-db:
+    image: postgres:16.1
+    container_name: book-keeper-db
+    environment:
+      POSTGRES_DB: book-keeper
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - book-keeper-db-data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  book-keeper-db-data:
