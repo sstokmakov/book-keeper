@@ -1,7 +1,10 @@
 package ru.tokmakov.bookkeeper.controller;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.tokmakov.bookkeeper.dto.BookDto;
 import ru.tokmakov.bookkeeper.dto.BookSaveDto;
@@ -27,8 +30,14 @@ public class BookController {
     }
 
     @PostMapping
-    public BookDto saveBook(@RequestBody BookSaveDto book) {
-        return bookService.saveBook(book);
+    @ResponseStatus(HttpStatus.CREATED)
+    public BookDto saveBook(@NotNull @Validated @RequestBody BookSaveDto bookSaveDto) {
+        log.info("POST /books - Creating new book. Request data: {}", bookSaveDto);
+
+        BookDto bookDto = bookService.saveBook(bookSaveDto);
+
+        log.info("POST /books - Book created successfully. Saved book: {}", bookDto);
+        return bookDto;
     }
 
     @PutMapping("/{id}")
