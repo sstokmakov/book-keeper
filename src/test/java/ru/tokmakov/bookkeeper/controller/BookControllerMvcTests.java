@@ -15,18 +15,20 @@ import org.springframework.test.web.servlet.MockMvc;
 import ru.tokmakov.bookkeeper.dto.BookDto;
 import ru.tokmakov.bookkeeper.dto.BookSaveDto;
 import ru.tokmakov.bookkeeper.exception.GlobalExceptionHandler;
+import ru.tokmakov.bookkeeper.exception.NotFoundException;
 import ru.tokmakov.bookkeeper.service.BookService;
 
 import java.nio.charset.StandardCharsets;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = BookController.class)
 @Import(GlobalExceptionHandler.class)
-class BookControllerValidationTest {
+class BookControllerMvcTests {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @MockitoBean
@@ -111,5 +113,35 @@ class BookControllerValidationTest {
                 .andExpect(jsonPath("$.reason", is("Incorrectly made request.")))
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    void findBookByIdIncorrectTypeIdShouldReturnBadRequestStatus() throws Exception {
+        String id = "incorrect";
+        Mockito.when(bookService.saveBook(Mockito.any(BookSaveDto.class))).thenReturn(bookDto);
+
+        mvc.perform(get("/books/{id}", id))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is("BAD_REQUEST")))
+                .andExpect(jsonPath("$.reason", is("Incorrectly made request.")))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    @Test
+    void findBookByIdNotFoundShouldReturnNotFoundStatus() throws Exception {
+        Long id = 1L;
+
+        Mockito.when(bookService.findBookById(id)).thenThrow(
+                new NotFoundException("Book with id " + id + " not found"));
+
+        mvc.perform(get("/books/{id}", id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", is("NOT_FOUND")))
+                .andExpect(jsonPath("$.reason", is("The required object was not found.")))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.timestamp").exists());
+
+        Mockito.verify(bookService).findBookById(id);
     }
 }
