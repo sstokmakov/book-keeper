@@ -20,8 +20,14 @@ public class BookController {
     private final BookService bookService;
 
     @GetMapping
+    @ResponseStatus(HttpStatus.OK)
     public List<BookDto> findAllBooks() {
-        return bookService.findAllBooks();
+        log.info("GET /books - Request received");
+
+        List<BookDto> books = bookService.findAllBooks();
+
+        log.debug("GET /books - Response: {} books found", books.size());
+        return books;
     }
 
     @GetMapping("/{bookId}")

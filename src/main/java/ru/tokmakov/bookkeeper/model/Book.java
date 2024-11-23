@@ -1,6 +1,7 @@
 package ru.tokmakov.bookkeeper.model;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 

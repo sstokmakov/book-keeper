@@ -22,7 +22,15 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional(readOnly = true)
     public List<BookDto> findAllBooks() {
-        return List.of();
+        log.info("Fetching all books");
+
+        List<Book> books = bookRepository.findAll();
+
+        log.info("Found {} books", books.size());
+
+        return books.stream()
+                .map(BookMapper::bookToBookDto)
+                .toList();
     }
 
     @Override
