@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import ru.tokmakov.bookkeeper.dto.BookDto;
 import ru.tokmakov.bookkeeper.dto.BookSaveDto;
 import ru.tokmakov.bookkeeper.dto.BookUpdateDto;
@@ -39,7 +40,6 @@ class BookControllerMvcTests {
     private MockMvc mvc;
 
     private BookDto bookDto;
-    private BookSaveDto bookSaveDto;
 
     @BeforeEach
     void setUp() {
@@ -48,15 +48,15 @@ class BookControllerMvcTests {
         bookDto.setTitle("title");
         bookDto.setAuthor("author");
         bookDto.setGenre("genre");
-
-        bookSaveDto = new BookSaveDto();
-        bookSaveDto.setTitle("title");
-        bookSaveDto.setAuthor("author");
-        bookSaveDto.setGenre("genre");
     }
 
     @Test
     void saveBookShouldReturnCreatedBookDto() throws Exception {
+        BookSaveDto bookSaveDto = new BookSaveDto();
+        bookSaveDto.setTitle("title");
+        bookSaveDto.setAuthor("author");
+        bookSaveDto.setGenre("genre");
+
         Mockito.when(bookService.saveBook(Mockito.any(BookSaveDto.class))).thenReturn(bookDto);
 
         mvc.perform(post("/books")
@@ -76,14 +76,10 @@ class BookControllerMvcTests {
 
         Mockito.when(bookService.saveBook(Mockito.any(BookSaveDto.class))).thenReturn(bookDto);
 
-        mvc.perform(post("/books")
-                        .content(mapper.writeValueAsString(bookSaveDto))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status", is("BAD_REQUEST")))
-                .andExpect(jsonPath("$.reason", is("Incorrectly made request.")))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.timestamp").exists());
+        ResultActions resultActions = mvc.perform(post("/books")
+                .content(mapper.writeValueAsString(bookSaveDto))
+                .contentType(MediaType.APPLICATION_JSON));
+        checkBadRequestResponse(resultActions);
     }
 
     private BookSaveDto createBookSaveDtoWithoutField(String missingField) {
@@ -100,14 +96,10 @@ class BookControllerMvcTests {
     void saveBookWithoutBodyShouldReturnMethodArgumentNotValidException() throws Exception {
         Mockito.when(bookService.saveBook(Mockito.any(BookSaveDto.class))).thenReturn(bookDto);
 
-        mvc.perform(post("/books")
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status", is("BAD_REQUEST")))
-                .andExpect(jsonPath("$.reason", is("Incorrectly made request.")))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.timestamp").exists());
+        ResultActions resultActions = mvc.perform(post("/books")
+                .characterEncoding(StandardCharsets.UTF_8)
+                .contentType(MediaType.APPLICATION_JSON));
+        checkBadRequestResponse(resultActions);
     }
 
     @Test
@@ -115,12 +107,8 @@ class BookControllerMvcTests {
         String id = "incorrect";
         Mockito.when(bookService.saveBook(Mockito.any(BookSaveDto.class))).thenReturn(bookDto);
 
-        mvc.perform(get("/books/{id}", id))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status", is("BAD_REQUEST")))
-                .andExpect(jsonPath("$.reason", is("Incorrectly made request.")))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.timestamp").exists());
+        ResultActions resultActions = mvc.perform(get("/books/{id}", id));
+        checkBadRequestResponse(resultActions);
     }
 
     @Test
@@ -130,12 +118,8 @@ class BookControllerMvcTests {
         Mockito.when(bookService.findBookById(id)).thenThrow(
                 new NotFoundException("Book with id " + id + " not found"));
 
-        mvc.perform(get("/books/{id}", id))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status", is("NOT_FOUND")))
-                .andExpect(jsonPath("$.reason", is("The required object was not found.")))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.timestamp").exists());
+        ResultActions resultActions = mvc.perform(get("/books/{id}", id));
+        checkNotFoundResponse(resultActions);
 
         Mockito.verify(bookService).findBookById(id);
     }
@@ -190,14 +174,10 @@ class BookControllerMvcTests {
         Mockito.when(bookService.updateBook(Mockito.eq(id), Mockito.any(BookUpdateDto.class)))
                 .thenThrow(new NotFoundException("Book with id " + id + " not found"));
 
-        mvc.perform(patch("/books/{id}", id)
-                        .content(mapper.writeValueAsString(updateDto))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status", is("NOT_FOUND")))
-                .andExpect(jsonPath("$.reason", is("The required object was not found.")))
-                .andExpect(jsonPath("$.message", is("Book with id " + id + " not found")))
-                .andExpect(jsonPath("$.timestamp").exists());
+        ResultActions resultActions = mvc.perform(patch("/books/{id}", id)
+                .content(mapper.writeValueAsString(updateDto))
+                .contentType(MediaType.APPLICATION_JSON));
+        checkNotFoundResponse(resultActions);
 
         Mockito.verify(bookService).updateBook(Mockito.eq(id), Mockito.any(BookUpdateDto.class));
     }
@@ -208,14 +188,10 @@ class BookControllerMvcTests {
         BookUpdateDto updateDto = new BookUpdateDto();
         updateDto.setAuthor("q");
 
-        mvc.perform(patch("/books/{id}", id)
-                        .content(mapper.writeValueAsString(updateDto))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status", is("BAD_REQUEST")))
-                .andExpect(jsonPath("$.reason", is("Incorrectly made request.")))
-                .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.timestamp").exists());
+        ResultActions resultActions = mvc.perform(patch("/books/{id}", id)
+                .content(mapper.writeValueAsString(updateDto))
+                .contentType(MediaType.APPLICATION_JSON));
+        checkBadRequestResponse(resultActions);
     }
 
     @Test
@@ -224,12 +200,8 @@ class BookControllerMvcTests {
         Mockito.doThrow(new NotFoundException("Book with id " + id + " not found"))
                 .when(bookService).deleteBook(id);
 
-        mvc.perform(delete("/books/{id}", id))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status", is("NOT_FOUND")))
-                .andExpect(jsonPath("$.reason", is("The required object was not found.")))
-                .andExpect(jsonPath("$.message", is("Book with id " + id + " not found")))
-                .andExpect(jsonPath("$.timestamp").exists());
+        ResultActions resultActions = mvc.perform(delete("/books/{id}", id));
+        checkNotFoundResponse(resultActions);
 
         Mockito.verify(bookService).deleteBook(Mockito.eq(id));
     }
@@ -242,5 +214,21 @@ class BookControllerMvcTests {
                 .andExpect(status().isNoContent());
 
         Mockito.verify(bookService).deleteBook(Mockito.eq(id));
+    }
+
+    private void checkBadRequestResponse(ResultActions result) throws Exception {
+        result.andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is("BAD_REQUEST")))
+                .andExpect(jsonPath("$.reason", is("Incorrectly made request.")))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
+
+    private void checkNotFoundResponse(ResultActions result) throws Exception {
+        result.andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", is("NOT_FOUND")))
+                .andExpect(jsonPath("$.reason", is("The required object was not found.")))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.timestamp").exists());
     }
 }
