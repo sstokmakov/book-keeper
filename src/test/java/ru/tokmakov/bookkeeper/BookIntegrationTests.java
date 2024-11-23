@@ -12,6 +12,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+import ru.tokmakov.bookkeeper.controller.BookController;
+import ru.tokmakov.bookkeeper.dto.BookDto;
 import ru.tokmakov.bookkeeper.dto.BookSaveDto;
 
 import static org.hamcrest.Matchers.*;
@@ -29,6 +31,9 @@ class BookIntegrationTests {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private BookController bookController;
 
     private BookSaveDto bookSaveDto;
 
@@ -56,17 +61,9 @@ class BookIntegrationTests {
     @Test
     @Transactional
     void getSavedBookByIdShouldReturnCorrectBookDto() throws Exception {
-        MvcResult result = mvc.perform(post("/books")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(bookSaveDto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").exists())
-                .andReturn();
+        BookDto bookDto = bookController.saveBook(bookSaveDto);
 
-        String responseContent = result.getResponse().getContentAsString();
-        Long createdBookId = JsonPath.parse(responseContent).read("$.id", Long.class);
-
-        mvc.perform(get("/books/{id}", createdBookId))
+        mvc.perform(get("/books/{id}", bookDto.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title", is(bookSaveDto.getTitle())))
                 .andExpect(jsonPath("$.author", is(bookSaveDto.getAuthor())))
@@ -89,9 +86,7 @@ class BookIntegrationTests {
     @Transactional
     void findAllBooksShouldReturnAllBooks() throws Exception {
         for (int i = 0; i < 2; i++) {
-            mvc.perform(post("/books")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(mapper.writeValueAsString(bookSaveDto)));
+            bookController.saveBook(bookSaveDto);
         }
 
         mvc.perform(get("/books"))
