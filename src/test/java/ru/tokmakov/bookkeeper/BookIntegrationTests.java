@@ -1,7 +1,6 @@
 package ru.tokmakov.bookkeeper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,16 +9,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 import ru.tokmakov.bookkeeper.controller.BookController;
 import ru.tokmakov.bookkeeper.dto.BookDto;
 import ru.tokmakov.bookkeeper.dto.BookSaveDto;
+import ru.tokmakov.bookkeeper.dto.BookUpdateDto;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -102,5 +100,54 @@ class BookIntegrationTests {
         mvc.perform(get("/books"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
+    }
+
+    @Test
+    @Transactional
+    void updateBookShouldReturnCorrectBookDto() throws Exception {
+        BookDto bookDto = bookController.saveBook(bookSaveDto);
+        BookUpdateDto updateDto = new BookUpdateDto();
+        updateDto.setAuthor("new author");
+
+        mvc.perform(patch("/books/{id}", bookDto.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.author", is(updateDto.getAuthor())))
+                .andExpect(jsonPath("$.title", is(bookSaveDto.getTitle())))
+                .andExpect(jsonPath("$.genre", is(bookSaveDto.getGenre())));
+    }
+
+    @Test
+    @Transactional
+    void updateAllFieldsShouldReturnCorrectBookDto() throws Exception {
+        BookDto bookDto = bookController.saveBook(bookSaveDto);
+        BookUpdateDto updateDto = new BookUpdateDto();
+        updateDto.setAuthor("new author");
+        updateDto.setTitle("new title");
+        updateDto.setGenre("new genre");
+
+        mvc.perform(patch("/books/{id}", bookDto.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.author", is(updateDto.getAuthor())))
+                .andExpect(jsonPath("$.title", is(updateDto.getTitle())))
+                .andExpect(jsonPath("$.genre", is(updateDto.getGenre())));
+    }
+
+    @Test
+    @Transactional
+    void updateBookWithoutFieldsShouldReturnCorrectBookDto() throws Exception {
+        BookDto bookDto = bookController.saveBook(bookSaveDto);
+        BookUpdateDto updateDto = new BookUpdateDto();
+
+        mvc.perform(patch("/books/{id}", bookDto.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(updateDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.author", is(bookSaveDto.getAuthor())))
+                .andExpect(jsonPath("$.title", is(bookSaveDto.getTitle())))
+                .andExpect(jsonPath("$.genre", is(bookSaveDto.getGenre())));
     }
 }
