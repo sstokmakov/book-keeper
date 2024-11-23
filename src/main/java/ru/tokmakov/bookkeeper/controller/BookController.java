@@ -63,7 +63,12 @@ public class BookController {
     }
 
     @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteBook(@PathVariable Long id) {
+        log.info("DELETE /books/{} - Deleting book. Request received", id);
+
         bookService.deleteBook(id);
+
+        log.info("DELETE /books/{} - Deleted successfully", id);
     }
 }

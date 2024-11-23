@@ -93,7 +93,15 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public void deleteBook(Long id) {
+        log.info("Attempting to delete book with ID: {}", id);
 
+        Book book = getBookById(id);
+
+        log.info("Book found: ID={}, Title={}, Author={}", book.getId(), book.getTitle(), book.getAuthor());
+
+        bookRepository.deleteById(book.getId());
+
+        log.info("Successfully deleted book with ID: {}", id);
     }
 
     private Book getBookById(Long bookId) {
