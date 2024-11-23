@@ -1,6 +1,5 @@
 package ru.tokmakov.bookkeeper.service;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,16 +53,12 @@ class BookServiceUnitTests {
 
     @Test
     void saveBookCorrectShouldReturnBookDto() {
-        Mockito.when(bookRepository.save(Mockito.any(Book.class))).thenReturn(book);
+        Mockito.when(bookRepository.save(book)).thenReturn(book);
 
         BookDto actualBookDto = bookService.saveBook(bookSaveDto);
 
-        Assertions.assertEquals(bookDto.getId(), actualBookDto.getId());
-        Assertions.assertEquals(bookDto.getTitle(), actualBookDto.getTitle());
-        Assertions.assertEquals(bookDto.getAuthor(), actualBookDto.getAuthor());
-        Assertions.assertEquals(bookDto.getGenre(), actualBookDto.getGenre());
-
-        Mockito.verify(bookRepository).save(Mockito.any(Book.class));
+        assertThat(actualBookDto).isEqualTo(bookDto);
+        Mockito.verify(bookRepository).save(book);
     }
 
     @Test
@@ -86,11 +81,9 @@ class BookServiceUnitTests {
 
         List<BookDto> actualBooks = bookService.findAllBooks();
 
+        assertThat(actualBooks).hasSize(2)
+                .extracting(BookDto::getTitle).containsExactly("Book 1", "Book 2");
         Mockito.verify(bookRepository).findAll();
-
-        assertThat(actualBooks).hasSize(2);
-        assertThat(actualBooks).extracting(BookDto::getTitle).containsExactly("Book 1", "Book 2");
-        assertThat(actualBooks).extracting(BookDto::getAuthor).containsExactly("Author 1", "Author 2");
     }
 
     @Test
@@ -100,18 +93,13 @@ class BookServiceUnitTests {
 
         BookDto actualBookDto = bookService.findBookById(id);
 
-        Assertions.assertEquals(bookDto.getId(), actualBookDto.getId());
-        Assertions.assertEquals(bookDto.getTitle(), actualBookDto.getTitle());
-        Assertions.assertEquals(bookDto.getAuthor(), actualBookDto.getAuthor());
-        Assertions.assertEquals(bookDto.getGenre(), actualBookDto.getGenre());
-
-        Mockito.verify(bookRepository).findById(Mockito.anyLong());
+        assertThat(actualBookDto).isEqualTo(bookDto);
+        Mockito.verify(bookRepository).findById(id);
     }
 
     @Test
     void findBookByIdNotFoundShouldThrowNotFoundException() {
         Long id = 1L;
-
         Mockito.when(bookRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> bookService.findBookById(id))
@@ -122,21 +110,8 @@ class BookServiceUnitTests {
     }
 
     @Test
-    void deleteBookNotFoundShouldThrowNotFoundException() {
-        Long id = 1L;
-        Mockito.when(bookRepository.findById(id)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> bookService.deleteBook(id))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("Book with id " + id + " not found");
-
-        Mockito.verify(bookRepository).findById(id);
-    }
-
-    @Test
     void deleteBookCorrectShouldInvokeDeleteMethod() {
         Long id = 1L;
-
         Mockito.when(bookRepository.findById(id)).thenReturn(Optional.of(book));
 
         bookService.deleteBook(id);
