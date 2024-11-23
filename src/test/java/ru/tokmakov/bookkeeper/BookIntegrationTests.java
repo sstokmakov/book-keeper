@@ -84,4 +84,28 @@ class BookIntegrationTests {
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.timestamp").exists());
     }
+
+    @Test
+    @Transactional
+    void findAllBooksShouldReturnAllBooks() throws Exception {
+        for (int i = 0; i < 2; i++) {
+            mvc.perform(post("/books")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(mapper.writeValueAsString(bookSaveDto)));
+        }
+
+        mvc.perform(get("/books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id").exists())
+                .andExpect(jsonPath("$[1].id").exists());
+    }
+
+    @Test
+    @Transactional
+    void findAllBooksShouldReturnEmptyList() throws Exception {
+        mvc.perform(get("/books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(0)));
+    }
 }

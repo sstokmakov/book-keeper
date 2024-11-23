@@ -14,8 +14,10 @@ import ru.tokmakov.bookkeeper.exception.NotFoundException;
 import ru.tokmakov.bookkeeper.model.Book;
 import ru.tokmakov.bookkeeper.repository.BookRepository;
 
+import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,7 +67,30 @@ class BookServiceUnitTests {
     }
 
     @Test
-    void findAllBooks() {
+    void findAllBooksShouldReturnPagedBooks() {
+        Book book1 = new Book();
+        book1.setId(1L);
+        book1.setTitle("Book 1");
+        book1.setAuthor("Author 1");
+        book1.setGenre("Genre 1");
+
+        Book book2 = new Book();
+        book2.setId(2L);
+        book2.setTitle("Book 2");
+        book2.setAuthor("Author 2");
+        book2.setGenre("Genre 2");
+
+        List<Book> books = List.of(book1, book2);
+
+        Mockito.when(bookRepository.findAll()).thenReturn(books);
+
+        List<BookDto> actualBooks = bookService.findAllBooks();
+
+        Mockito.verify(bookRepository).findAll();
+
+        assertThat(actualBooks).hasSize(2);
+        assertThat(actualBooks).extracting(BookDto::getTitle).containsExactly("Book 1", "Book 2");
+        assertThat(actualBooks).extracting(BookDto::getAuthor).containsExactly("Author 1", "Author 2");
     }
 
     @Test

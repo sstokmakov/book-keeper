@@ -19,6 +19,7 @@ import ru.tokmakov.bookkeeper.exception.NotFoundException;
 import ru.tokmakov.bookkeeper.service.BookService;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -143,5 +144,44 @@ class BookControllerMvcTests {
                 .andExpect(jsonPath("$.timestamp").exists());
 
         Mockito.verify(bookService).findBookById(id);
+    }
+
+    @Test
+    void findAllBooksShouldReturnBooks() throws Exception {
+        BookDto book1 = new BookDto();
+        book1.setId(1L);
+        book1.setTitle("Book 1");
+        book1.setAuthor("Author 1");
+        book1.setGenre("Genre 1");
+
+        BookDto book2 = new BookDto();
+        book2.setId(2L);
+        book2.setTitle("Book 2");
+        book2.setAuthor("Author 2");
+        book2.setGenre("Genre 2");
+
+        List<BookDto> books = List.of(book1, book2);
+
+        Mockito.when(bookService.findAllBooks()).thenReturn(books);
+
+        mvc.perform(get("/books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1))
+                .andExpect(jsonPath("$[0].title").value("Book 1"))
+                .andExpect(jsonPath("$[0].author").value("Author 1"))
+                .andExpect(jsonPath("$[0].genre").value("Genre 1"))
+                .andExpect(jsonPath("$[1].id").value(2))
+                .andExpect(jsonPath("$[1].title").value("Book 2"))
+                .andExpect(jsonPath("$[1].author").value("Author 2"))
+                .andExpect(jsonPath("$[1].genre").value("Genre 2"));
+    }
+
+    @Test
+    void findAllBooksNoBooksShouldReturnEmptyList() throws Exception {
+        Mockito.when(bookService.findAllBooks()).thenReturn(List.of());
+
+        mvc.perform(get("/books"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 }
