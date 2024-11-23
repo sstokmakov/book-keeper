@@ -109,7 +109,7 @@ class BookServiceUnitTests {
     }
 
     @Test
-    void findBookByIdNotFoundShouldThrowException() {
+    void findBookByIdNotFoundShouldThrowNotFoundException() {
         Long id = 1L;
 
         Mockito.when(bookRepository.findById(id)).thenReturn(Optional.empty());
@@ -122,6 +122,26 @@ class BookServiceUnitTests {
     }
 
     @Test
-    void deleteBook() {
+    void deleteBookNotFoundShouldThrowNotFoundException() {
+        Long id = 1L;
+        Mockito.when(bookRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> bookService.deleteBook(id))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("Book with id " + id + " not found");
+
+        Mockito.verify(bookRepository).findById(id);
+    }
+
+    @Test
+    void deleteBookCorrectShouldInvokeDeleteMethod() {
+        Long id = 1L;
+
+        Mockito.when(bookRepository.findById(id)).thenReturn(Optional.of(book));
+
+        bookService.deleteBook(id);
+
+        Mockito.verify(bookRepository).findById(id);
+        Mockito.verify(bookRepository).deleteById(book.getId());
     }
 }

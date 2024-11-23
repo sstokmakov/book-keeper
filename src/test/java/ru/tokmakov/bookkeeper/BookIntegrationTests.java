@@ -150,4 +150,18 @@ class BookIntegrationTests {
                 .andExpect(jsonPath("$.title", is(bookSaveDto.getTitle())))
                 .andExpect(jsonPath("$.genre", is(bookSaveDto.getGenre())));
     }
+
+    @Test
+    @Transactional
+    void deleteBookShouldRemoveBook() throws Exception {
+        BookDto bookDto = bookController.saveBook(bookSaveDto);
+        bookController.deleteBook(bookDto.getId());
+
+        mvc.perform(get("/books/{id}", bookDto.getId()))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", is("NOT_FOUND")))
+                .andExpect(jsonPath("$.reason", is("The required object was not found.")))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.timestamp").exists());
+    }
 }

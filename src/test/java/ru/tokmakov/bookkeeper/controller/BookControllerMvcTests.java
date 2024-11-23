@@ -217,4 +217,30 @@ class BookControllerMvcTests {
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.timestamp").exists());
     }
+
+    @Test
+    void deleteBookNotFoundShouldReturnNotFoundStatus() throws Exception {
+        Long id = 1L;
+        Mockito.doThrow(new NotFoundException("Book with id " + id + " not found"))
+                .when(bookService).deleteBook(id);
+
+        mvc.perform(delete("/books/{id}", id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status", is("NOT_FOUND")))
+                .andExpect(jsonPath("$.reason", is("The required object was not found.")))
+                .andExpect(jsonPath("$.message", is("Book with id " + id + " not found")))
+                .andExpect(jsonPath("$.timestamp").exists());
+
+        Mockito.verify(bookService).deleteBook(Mockito.eq(id));
+    }
+
+    @Test
+    void deleteCorrectShouldReturnNoContentStatus() throws Exception {
+        Long id = 1L;
+
+        mvc.perform(delete("/books/{id}", id))
+                .andExpect(status().isNoContent());
+
+        Mockito.verify(bookService).deleteBook(Mockito.eq(id));
+    }
 }
