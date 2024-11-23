@@ -8,6 +8,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.tokmakov.bookkeeper.dto.BookDto;
 import ru.tokmakov.bookkeeper.dto.BookSaveDto;
+import ru.tokmakov.bookkeeper.dto.BookUpdateDto;
 import ru.tokmakov.bookkeeper.service.BookService;
 
 import java.util.List;
@@ -51,9 +52,14 @@ public class BookController {
         return bookDto;
     }
 
-    @PutMapping("/{id}")
-    public BookDto updateBook(@PathVariable Long id, @RequestBody BookSaveDto book) {
-        return bookService.updateBook(id, book);
+    @PatchMapping("/{id}")
+    public BookDto updateBook(@PathVariable Long id, @NotNull @RequestBody @Validated BookUpdateDto bookUpdateDto) {
+        log.info("PATCH /books/{} - Updating book. Request data: {}", id, bookUpdateDto);
+
+        BookDto bookDto = bookService.updateBook(id, bookUpdateDto);
+
+        log.info("PATCH /books/{} - Updated successfully. Saved book: {}", id, bookDto);
+        return bookDto;
     }
 
     @DeleteMapping("/{id}")

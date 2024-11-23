@@ -7,6 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.tokmakov.bookkeeper.dto.BookDto;
 import ru.tokmakov.bookkeeper.dto.BookMapper;
 import ru.tokmakov.bookkeeper.dto.BookSaveDto;
+import ru.tokmakov.bookkeeper.dto.BookUpdateDto;
 import ru.tokmakov.bookkeeper.exception.NotFoundException;
 import ru.tokmakov.bookkeeper.model.Book;
 import ru.tokmakov.bookkeeper.repository.BookRepository;
@@ -38,8 +39,7 @@ public class BookServiceImpl implements BookService {
     public BookDto findBookById(Long bookId) {
         log.info("Attempting to find book with id: {}", bookId);
 
-        Book book = bookRepository.findById(bookId).
-                orElseThrow(() -> new NotFoundException("Book with id " + bookId + " not found"));
+        Book book = getBookById(bookId);
 
         BookDto bookDto = BookMapper.bookToBookDto(book);
         log.info("Successfully found book: {}", bookDto);
@@ -63,13 +63,41 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
-    public BookDto updateBook(Long bookId, BookSaveDto book) {
-        return null;
+    public BookDto updateBook(Long bookId, BookUpdateDto bookUpdateDto) {
+        log.info("Updating book with ID: {}, Update data: {}", bookId, bookUpdateDto);
+
+        Book bookToUpdate = getBookById(bookId);
+        log.info("Book found: {}", bookToUpdate);
+
+        updateFields(bookToUpdate, bookUpdateDto);
+        log.info("Fields updated for book with ID: {}", bookId);
+
+        Book updatedBook = bookRepository.save(bookToUpdate);
+        log.info("Book with ID: {} successfully updated and saved", bookId);
+
+        BookDto result = BookMapper.bookToBookDto(updatedBook);
+        log.info("Returning updated book DTO: {}", result);
+
+        return BookMapper.bookToBookDto(updatedBook);
+    }
+
+    private void updateFields(Book bookToUpdate, BookUpdateDto newBook) {
+        if (newBook.getTitle() != null)
+            bookToUpdate.setTitle(newBook.getTitle());
+        if (newBook.getAuthor() != null)
+            bookToUpdate.setAuthor(newBook.getAuthor());
+        if (newBook.getGenre() != null)
+            bookToUpdate.setGenre(newBook.getGenre());
     }
 
     @Override
     @Transactional
     public void deleteBook(Long id) {
 
+    }
+
+    private Book getBookById(Long bookId) {
+        return bookRepository.findById(bookId).
+                orElseThrow(() -> new NotFoundException("Book with id " + bookId + " not found"));
     }
 }
