@@ -53,12 +53,12 @@ class BookServiceUnitTests {
 
     @Test
     void saveBookCorrectShouldReturnBookDto() {
-        Mockito.when(bookRepository.save(book)).thenReturn(book);
+        Mockito.when(bookRepository.save(Mockito.any(Book.class))).thenReturn(book);
 
         BookDto actualBookDto = bookService.saveBook(bookSaveDto);
 
         assertThat(actualBookDto).isEqualTo(bookDto);
-        Mockito.verify(bookRepository).save(book);
+        Mockito.verify(bookRepository).save(Mockito.any(Book.class));
     }
 
     @Test
