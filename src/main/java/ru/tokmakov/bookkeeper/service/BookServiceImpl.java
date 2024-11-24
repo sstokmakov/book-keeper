@@ -14,12 +14,21 @@ import ru.tokmakov.bookkeeper.repository.BookRepository;
 
 import java.util.List;
 
+/**
+ * Сервисный класс для управления книгами.
+ * Реализует логику операций с книгами, включая создание, обновление, удаление и получение данных.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
 
+    /**
+     * Получение списка всех книг.
+     *
+     * @return список книг в формате {@link BookDto}.
+     */
     @Override
     @Transactional(readOnly = true)
     public List<BookDto> findAllBooks() {
@@ -34,6 +43,13 @@ public class BookServiceImpl implements BookService {
                 .toList();
     }
 
+    /**
+     * Получение книги по идентификатору.
+     *
+     * @param bookId идентификатор книги.
+     * @return книга в формате {@link BookDto}.
+     * @throws NotFoundException если книга с указанным идентификатором не найдена.
+     */
     @Override
     @Transactional(readOnly = true)
     public BookDto findBookById(Long bookId) {
@@ -47,6 +63,12 @@ public class BookServiceImpl implements BookService {
         return bookDto;
     }
 
+    /**
+     * Сохранение новой книги.
+     *
+     * @param bookSaveDto данные для сохранения книги в формате {@link BookSaveDto}.
+     * @return сохраненная книга в формате {@link BookDto}.
+     */
     @Override
     @Transactional
     public BookDto saveBook(BookSaveDto bookSaveDto) {
@@ -61,6 +83,14 @@ public class BookServiceImpl implements BookService {
         return savedBook;
     }
 
+    /**
+     * Обновление существующей книги.
+     *
+     * @param bookId        идентификатор книги.
+     * @param bookUpdateDto данные для обновления книги в формате {@link BookUpdateDto}.
+     * @return обновленная книга в формате {@link BookDto}.
+     * @throws NotFoundException если книга с указанным идентификатором не найдена.
+     */
     @Override
     @Transactional
     public BookDto updateBook(Long bookId, BookUpdateDto bookUpdateDto) {
@@ -81,15 +111,12 @@ public class BookServiceImpl implements BookService {
         return BookMapper.bookToBookDto(updatedBook);
     }
 
-    private void updateFields(Book bookToUpdate, BookUpdateDto newBook) {
-        if (newBook.getTitle() != null)
-            bookToUpdate.setTitle(newBook.getTitle());
-        if (newBook.getAuthor() != null)
-            bookToUpdate.setAuthor(newBook.getAuthor());
-        if (newBook.getGenre() != null)
-            bookToUpdate.setGenre(newBook.getGenre());
-    }
-
+    /**
+     * Удаление книги по идентификатору.
+     *
+     * @param id идентификатор книги.
+     * @throws NotFoundException если книга с указанным идентификатором не найдена.
+     */
     @Override
     @Transactional
     public void deleteBook(Long id) {
@@ -102,6 +129,15 @@ public class BookServiceImpl implements BookService {
         bookRepository.deleteById(book.getId());
 
         log.info("Successfully deleted book with ID: {}", id);
+    }
+
+    private void updateFields(Book bookToUpdate, BookUpdateDto newBook) {
+        if (newBook.getTitle() != null)
+            bookToUpdate.setTitle(newBook.getTitle());
+        if (newBook.getAuthor() != null)
+            bookToUpdate.setAuthor(newBook.getAuthor());
+        if (newBook.getGenre() != null)
+            bookToUpdate.setGenre(newBook.getGenre());
     }
 
     private Book getBookById(Long bookId) {
