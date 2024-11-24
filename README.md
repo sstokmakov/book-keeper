@@ -25,7 +25,7 @@
 1. **Склонируйте репозиторий:**
    ```bash
    git clone git@github.com:sstokmakov/book-keeper.git
-   cd book-keeper
+   cd java-book-keeper
    ```
 2. **Соберите JAR-файл приложения:**
    ```bash
